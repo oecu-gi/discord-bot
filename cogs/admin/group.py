@@ -1,5 +1,6 @@
 import discord
 from discord import app_commands
+import os
 import functools
 
 # ここで1つだけ Group インスタンスを作る
@@ -7,7 +8,7 @@ admin_group = app_commands.Group(name="admin", description="管理者コマン�
 
 def is_admin_or_specific_role():
     """
-    管理者権限を持っているか、特定のロール(ID: 1468589563323744338)を持っているユーザーのみ実行可能にするチェック
+    管理者権限を持っているか、Bot開発者のロールを持っているユーザーのみ実行可能にするチェック
     """
     def predicate(interaction: discord.Interaction) -> bool:
         # 管理者権限チェック
@@ -17,9 +18,11 @@ def is_admin_or_specific_role():
         # 特定のロールチェック
         # interaction.user は Member または User。Memberの場合のみroles属性がある。
         if isinstance(interaction.user, discord.Member):
-            role_id = 1468589563323744338
-            if any(role.id == role_id for role in interaction.user.roles):
-                return True
+            role_id_str = os.getenv("BOT_DEV_ROLE_ID")
+            if role_id_str:
+                role_id = int(role_id_str)
+                if any(role.id == role_id for role in interaction.user.roles):
+                    return True
         
         return False
 
