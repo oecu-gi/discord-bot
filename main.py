@@ -37,24 +37,21 @@ class MyBot(commands.Bot):
                     pass
                 except Exception as e:
                     print(f'パッケージ {path} の読み込みに失敗しました: {e}')
-                
-                # パッケージとして読み込んだディレクトリ内の個別ファイルは無視する
-                continue
-
-            for file in files:
-                if file.endswith('.py') and not file.startswith('__'):
-                    path = os.path.join(root, file)
-                    module = path.replace('.py', '').replace(os.path.sep, '.').replace('/', '.')
-                    
-                    try:
-                        await self.load_extension(module)
-                        print(f'拡張機能を読み込みました: {module}')
-                    except commands.errors.NoEntryPointError:
-                        pass
-                    except commands.errors.ExtensionAlreadyLoaded:
-                        pass
-                    except Exception as e:
-                        print(f'拡張機能 {module} の読み込みに失敗しました: {e}')
+            else:
+                for file in files:
+                    if file.endswith('.py') and not file.startswith('__'):
+                        path = os.path.join(root, file)
+                        module = path.replace('.py', '').replace(os.path.sep, '.').replace('/', '.')
+                        
+                        try:
+                            await self.load_extension(module)
+                            print(f'拡張機能を読み込みました: {module}')
+                        except commands.errors.NoEntryPointError:
+                            pass
+                        except commands.errors.ExtensionAlreadyLoaded:
+                            pass
+                        except Exception as e:
+                            print(f'拡張機能 {module} の読み込みに失敗しました: {e}')
 
 
         # コマンドを同期
