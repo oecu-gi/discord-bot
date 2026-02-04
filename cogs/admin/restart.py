@@ -10,4 +10,4 @@ async def restart(interaction: discord.Interaction):
     """ボットを再起動します。"""
     await interaction.response.send_message("ボットを再起動しています...", ephemeral=True)
     print("/admin restart 経由で再起動しています...")
-    sys.exit(0) # ループを通常通り継続させるために 0 で終了
+    await interaction.client.close()  # クライアントを正常に終了してからプロセスを終了させる
