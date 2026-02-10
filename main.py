@@ -1,6 +1,7 @@
 import discord
 import os
 import asyncio
+import sys
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -19,6 +20,7 @@ class MyBot(commands.Bot):
             intents=intents,
             help_command=None
         )
+        self.should_restart = False
 
     async def setup_hook(self):
         # Cogを再帰的に読み込む
@@ -73,5 +75,15 @@ if __name__ == '__main__':
         print("\n\033[31m[ERROR] Privileged Intents Required\033[0m")
         print("Discord Developer Portalで 'Privileged Gateway Intents' の 'Presence Intent' と 'Server Members Intent' を有効にしてください。")
         print("URL: https://discord.com/developers/applications")
+        sys.exit(0)
     except Exception as e:
         print(f"エラーが発生しました: {e}")
+        sys.exit(1) # 予期せぬエラーは再起動させる
+    
+    # 正常終了後の処理
+    if bot.should_restart:
+        print("再起動フラグが立っています。終了コード1で終了します。")
+        sys.exit(1)
+    else:
+        print("終了します。")
+        sys.exit(0)
