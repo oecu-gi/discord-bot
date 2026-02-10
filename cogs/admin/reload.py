@@ -47,25 +47,48 @@ async def reload(interaction: discord.Interaction):
     # コマンドを同期
     await update_msg("🔄 コマンドの同期を開始します...")
     try:
-        # 同期前のコマンドを取得
-        old_commands = await bot.tree.fetch_commands()
-        old_cmd_names = {cmd.name for cmd in old_commands}
+        # --- グローバル同期 ---
+        # 同期前のグローバルコマンドを取得
+        old_global_commands = await bot.tree.fetch_commands()
+        old_global_names = {cmd.name for cmd in old_global_commands}
 
-        # 同期実行
-        new_commands = await bot.tree.sync()
-        new_cmd_names = {cmd.name for cmd in new_commands}
+        # グローバル同期実行
+        new_global_commands = await bot.tree.sync()
+        new_global_names = {cmd.name for cmd in new_global_commands}
 
-        await update_msg("🔄 グローバルコマンドが同期されました")
+        await update_msg("✅ グローバルコマンドが同期されました")
 
-        # 差分比較
-        added = new_cmd_names - old_cmd_names
-        removed = old_cmd_names - new_cmd_names
+        # --- ギルド同期 ---
+        old_guild_names = set()
+        new_guild_names = set()
+
+        if interaction.guild:
+            try:
+                # 同期前のギルドコマンドを取得
+                old_guild_commands = await bot.tree.fetch_commands(guild=interaction.guild)
+                old_guild_names = {cmd.name for cmd in old_guild_commands}
+            except discord.HTTPException:
+                # ギルドコマンドがまだない場合や権限不足のエラーを考慮
+                pass
+
+            # ギルド同期実行
+            new_guild_commands = await bot.tree.sync(guild=interaction.guild)
+            new_guild_names = {cmd.name for cmd in new_guild_commands}
+            await update_msg(f"✅ ギルドコマンドが同期されました (Guild: {interaction.guild.name})")
+
+        # --- 差分比較 (グローバルとギルドを合わせて比較) ---
+        old_all_names = old_global_names | old_guild_names
+        new_all_names = new_global_names | new_guild_names
+
+        added = new_all_names - old_all_names
+        removed = old_all_names - new_all_names
 
         if added:
             await update_msg(f"🆕 追加されたコマンド: {', '.join(added)}")
         if removed:
             await update_msg(f"🗑️ 削除されたコマンド: {', '.join(removed)}")
         if not added and not removed:
-            await update_msg("✨ コマンドに変更はありませんでした")
+            await update_msg("✨ コマンドの追加・削除はありませんでした")
+
     except Exception as e:
         await update_msg(f"❌ コマンドの同期に失敗しました: {e}")
