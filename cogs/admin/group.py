@@ -3,6 +3,9 @@ from discord import app_commands
 import os
 import functools
 
+class AdminPermissionError(app_commands.CheckFailure):
+    pass
+
 # ここで1つだけ Group インスタンスを作る
 admin_group = app_commands.Group(name="admin", description="管理者コマンド")
 
@@ -24,6 +27,17 @@ def is_admin_or_specific_role():
                 if any(role.id == role_id for role in interaction.user.roles):
                     return True
         
-        return False
+        # 権限がない場合はカスタムエラーを送出
+        raise AdminPermissionError("このコマンドを実行する権限がありません。")
 
     return app_commands.check(predicate)
+
+@admin_group.error
+async def on_admin_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, AdminPermissionError):
+        await interaction.response.send_message(str(error), ephemeral=True)
+    else:
+        # その他のエラーはここで処理するか、グローバルハンドラに任せる
+        # ここではとりあえずログに出して、ユーザーには汎用エラーを返す例
+        print(f"Admin command error: {error}")
+        await interaction.response.send_message("エラーが発生しました。", ephemeral=True)
